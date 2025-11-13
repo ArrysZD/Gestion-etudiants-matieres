@@ -1,1164 +1,1476 @@
-//projet gestion d'etudiant .........
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
-#include<conio.h>
-#define max 50
+// projet gestion d'etudiants
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
 
-//declaration
-int i,nm,n,nb,j,choixxx,choixx,choix,choixxxx;
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
-struct etudiants{
-     int matricule,jour,mois,annee;
-     char nom[30],prenom[30],lieu_de_naissance[30];
-     char adresse[30];
-     float moy[50];
-};
-struct etudiants les_etudiants[max];
+#define MAX_ETUDIANTS     50
+#define MAX_MODULES       50
+#define MAX_NAME_LEN      30
+#define MAX_ADDR_LEN      30
+#define MAX_MODNAME_LEN   50
+#define MAX_BUFFER_FENETRE 8192
 
-struct etudiants2{
-     int matricule2,jour2,mois2,annee2;
-     char nom2[30],prenom2[30],lieu_de_naissance2[30];
-     char adresse2[30];
-     float moy2[50];
-};
-struct etudiants2 etudiants2[max];
+//======================================================================
+// Structures
+//======================================================================
 
-struct trier{
-     int matriculee,jourr,moiss,anneee;
-     char nomm[30],prenomm[30],lieu_de_naissancee[30];
-     char adressel[30];
-     int coeff;
-     char nomf[50];
-     int codef;
-     float moy[50];
-};
-struct trier trier[max];
+typedef struct {
+    int matricule;
+    int jour, mois, annee;
+    char nom[MAX_NAME_LEN];
+    char prenom[MAX_NAME_LEN];
+    char lieu_de_naissance[MAX_NAME_LEN];
+    char adresse[MAX_ADDR_LEN];
+} Etudiant;
 
-struct module{
-     int coef;
-     char nom[50];
-     int code;
-     float moy[50];
-};
-struct module module[max];
+typedef struct {
+    int matricule;
+    int jour, mois, annee;
+    char nom[MAX_NAME_LEN];
+    char prenom[MAX_NAME_LEN];
+    char lieu_de_naissance[MAX_NAME_LEN];
+    char adresse[MAX_ADDR_LEN];
+    float moy; // moyenne générale
+} EtudiantView;
 
+typedef struct {
+    int coef;
+    char nom[MAX_MODNAME_LEN];
+    int code;
+    float moy; // moyenne du module
+} Module;
 
-struct module2{
-     int coef2;
-     char nom2[50];
-     int code2;
-     float moy2[50];
-};
-struct module2 module2[max];
+typedef struct {
+    int coef;
+    char nom[MAX_MODNAME_LEN];
+    int code;
+    float moy;
+} ModuleView;
 
-struct note{
-     float N[100][20];
-     int matriculenote;
-     char nomnote[30];
-};
-struct note note[max];
+// Structure temporaire pour échanges (tri)
+typedef struct {
+    int matricule;
+    int jour, mois, annee;
+    char nom[MAX_NAME_LEN];
+    char prenom[MAX_NAME_LEN];
+    char lieu[MAX_NAME_LEN];
+    char adresse[MAX_ADDR_LEN];
+    int coef;
+    int code;
+    char nomModule[MAX_MODNAME_LEN];
+    float moy;
+} Tmp;
 
-struct moyenne {
-float moy;
-int code;
-};
+//======================================================================
+// Données globales
+//======================================================================
 
-struct liste {
-struct moyenne* m;           // Donnée stockée dans l'élément
-struct liste* next;  // Pointeur vers l'élément suivant
-};
+Etudiant     etudiants[MAX_ETUDIANTS + 1];      // indexés à partir de 1
+EtudiantView etudiants2[MAX_ETUDIANTS + 1];     // vue pour tris/affichage
 
+Module       modules[MAX_MODULES + 1];          // indexés à partir de 1
+ModuleView   modules2[MAX_MODULES + 1];         // vue pour tris/affichage
 
-///LES PROCEDURES
-void reglage(){
-     FILE *nt;
-nt=fopen("notes.txt","w");
-fprintf(nt,"les notes des etudiants : \n\n");
-fprintf(nt,"matricule | nom prenom | note \n\n");
-for(i=1;i<=n;i++){
-     fprintf(nt,"%d | %s %s | ",les_etudiants[i].matricule,les_etudiants[i].nom,les_etudiants[i].prenom);
-     for(j=1;j<=nm;j++){
-          fprintf(nt,"%s : %0.2f  ",module[j].nom,note->N[i][j]);
-     }
-     fprintf(nt,"\n");
-}
-fclose(nt);
-     }
-//*******************************procedure saisir la liste d'etudiants**************************************************************
-void saisir_des_etudiant(){
-     FILE *f;
-     f=fopen("etudiants.txt","a");
-printf("Entrer le nombre des etudiants que vous vouliez saisie : ");
-scanf("%d",&nb);
-printf("\n\n");
-fprintf(f,"la list des etudiants : \n\n");
-fprintf(f,"matricule | nom | prenom | date de naissance | lieu de naissance | adresse \n\n");
+float        notes[MAX_ETUDIANTS + 1][MAX_MODULES + 1]; // notes[i][j]
 
-for(i=1;i<=nb;i++){
+int n  = 0;  // nombre d'étudiants
+int nm = 0;  // nombre de modules
 
-     printf("Saisir les informations de l'etudiant numero %d :  \n\n",n+1);
-     printf("matricule : ");
-     scanf("%d",&les_etudiants[n+1].matricule);
-     for(j=0;j<n+1;j++){
-          if(les_etudiants[n+1].matricule==les_etudiants[j].matricule){
-          printf("le matricule est deja utiliser saisissez un autre! : ");
-          scanf("%d",&les_etudiants[n+1].matricule);
-          j=j-1;
-          }
-     }
-     printf("Nom : ");
-     scanf("%s",&les_etudiants[n+1].nom);
-     printf("Prenom : ");
-     scanf("%s",&les_etudiants[n+1].prenom);
-     printf("date de naissance (jour mois annee): ");
-     do{ printf("le jour : ");
-          scanf("%d",&les_etudiants[n+1].jour);
-          if((les_etudiants[n+1].jour>31)||(les_etudiants[n+1].jour==0)){
-          printf("le jour doit etre valide [1-31] ");
-          }
-     }while((les_etudiants[n+1].jour>31)||(les_etudiants[n+1].jour==0));
+int choix = 0, choixx = 0, choixxx = 0, choixxxx = 0;
 
-     do{ printf("le mois : ");
-          scanf("%d",&les_etudiants[n+1].mois);
-          if(les_etudiants[n+1].mois>12){
-          printf("le mois doit etre valide [1-12] ");
-          }
-     }while((les_etudiants[n+1].mois>12)||(les_etudiants[n+1].mois==0));
+//======================================================================
+// Prototypes
+//======================================================================
 
+void reglage(void);
 
-     do{ printf("l annee : ");
-          scanf("%d",&les_etudiants[n+1].annee);
-          if((les_etudiants[n+1].annee==0)||(les_etudiants[n+1].annee>=2024)){
-          printf("l annee doit etre valide ");
-          }
-     }while((les_etudiants[n+1].annee==0)||(les_etudiants[n+1].annee>=2024));
-     printf("lieu de naissance : ");
-     scanf("%s",&les_etudiants[n+1].lieu_de_naissance);
-     printf("adresse : ");
-     scanf(" %[^\n]",&les_etudiants[n+1].adresse);
-     if (f == NULL) {
-     printf("Erreur d'ouverture du fichier.\n");
-     return;
-}
+// gestion étudiants
+void saisir_des_etudiant(void);
+void afficher_les_etudiants(void);
+void modifier(void);
+void supprimer(void);
+void ajouter(void);
 
-fprintf(f, "%d | %s | %s | %d/%d/%d | %s | %s\n", les_etudiants[n+1].matricule, les_etudiants[n+1].nom, les_etudiants[n+1].prenom, les_etudiants[n+1].jour, les_etudiants[n+1].mois, les_etudiants[n+1].annee,les_etudiants[n+1].lieu_de_naissance, les_etudiants[n+1].adresse);
+// tri et moyennes étudiants
+void trier_ordre_alphabetique_ascendent(void);
+void trier_ordre_alphabetique_descendant(void);
+void afficher_moy_decroi(void);
+void afficher_moy_CROIS(void);
 
+// gestion modules
+void saisir_les_modules(void);
+void ajouter_modules(void);
+void modifier_module(void);
+void supprimer_module(void);
+void afficher_les_modules(void);
+void trier_module_par_nom_ascendent(void);
+void trier_module_par_nom_descendant(void);
+void moyenne_module_crois(void);
+void moyenne_module_decroi(void);
 
+// gestion notes
+void saisir_les_notes(void);
+void afficher_les_notes(void);
 
-     n=n+1;
-}
-for(i=1;i<=nb;i++){
-     etudiants2[i].matricule2=les_etudiants[i].matricule;
-     strcpy(etudiants2[i].nom2,les_etudiants[i].nom);
-     strcpy(etudiants2[i].adresse2,les_etudiants[i].adresse);
-     strcpy(etudiants2[i].prenom2,les_etudiants[i].prenom);
-     strcpy(etudiants2[i].lieu_de_naissance2,les_etudiants[i].lieu_de_naissance);
-     etudiants2[i].jour2=les_etudiants[i].jour;
-     etudiants2[i].annee2=les_etudiants[i].annee;
-     etudiants2[i].mois2=les_etudiants[i].mois;}
-          fclose(f);}
+// divers
+void quitter(void);
 
-////*******************************procedure afficher la liste d'etudiants*******************************
-void afficher_les_etudiants(){
-     system("cls");
-     if(n==0){
-          printf("la liste est vide ");
-     }
-for(i=1;i<=n;i++){ printf("\n");
-     printf("etudient avec  : \nmatricule :%d \n",les_etudiants[i].matricule);
-     printf("Son Nom : %s \n",les_etudiants[i].nom);
-     printf("son Prenom : %s \n",les_etudiants[i].prenom);
-     printf("sa date de naissance : %d %d %d \n",les_etudiants[i].jour,les_etudiants[i].mois,les_etudiants[i].annee);
-     printf("son lieu de naissance : %s \n",les_etudiants[i].lieu_de_naissance);
-     printf("son adresse : %s \n",les_etudiants[i].adresse);
+// helpers internes
+static void sync_etudiants_view(void);
+static void sync_modules_view(void);
+static int  lire_int_sure(const char *msg);
+static void lire_chaine(const char *msg, char *dest, int taille);
+static void show_text_window(const char *title, const char *text);
+static void append_line(char *buffer, size_t size, const char *fmt, ...);
+
+//======================================================================
+// Helpers
+//======================================================================
+
+static void sync_etudiants_view(void) {
+    for (int i = 1; i <= n; ++i) {
+        etudiants2[i].matricule          = etudiants[i].matricule;
+        etudiants2[i].jour               = etudiants[i].jour;
+        etudiants2[i].mois               = etudiants[i].mois;
+        etudiants2[i].annee              = etudiants[i].annee;
+        strcpy(etudiants2[i].nom,        etudiants[i].nom);
+        strcpy(etudiants2[i].prenom,     etudiants[i].prenom);
+        strcpy(etudiants2[i].lieu_de_naissance, etudiants[i].lieu_de_naissance);
+        strcpy(etudiants2[i].adresse,    etudiants[i].adresse);
+        etudiants2[i].moy                = 0.0f;
+    }
 }
 
+static void sync_modules_view(void) {
+    for (int i = 1; i <= nm; ++i) {
+        modules2[i].code = modules[i].code;
+        modules2[i].coef = modules[i].coef;
+        strcpy(modules2[i].nom, modules[i].nom);
+        modules2[i].moy  = modules[i].moy;
+    }
 }
 
-//*******************************procedure modifier un etudiant*******************************************
-void modifier(){
-     int mat,k=0;
-     int i;
-     FILE *f; int y;
-     printf("la liste des etudiants enregistre:\n");
-     if(n==0){
-          printf("la liste est vide ");
-     }
-     for(i=1;i<=n;i++){
-     printf("matricule: %d           etudiant:%s %s\n",les_etudiants[i].matricule,les_etudiants[i].nom,les_etudiants[i].prenom);
-     }
-     reessaye:
-     printf("\n \n");
-     printf("Saisir le matricule de l etudiant que vous vouliez modifier : ");
-     scanf("%d",&mat);
-
-     for(i=1;i<=n;i++){
-          if(les_etudiants[i].matricule==mat){
-               k=i;
-          }
-     }
-     if(k==0) {
-               printf("aucun etudiant a le matricule saisie");
-               goto reessaye;
-          }
-          int arris;
-printf("nouveau matricule : ");
-scanf("%d",&les_etudiants[k].matricule);
-for(i=1;i<=n;i++){
-     if(les_etudiants[k].matricule==les_etudiants[i].matricule){
-          printf("le matricule est deja utiliser saisissez un autre! : ");
-          scanf("%d",&arris);
-     }
+static int lire_int_sure(const char *msg) {
+    int x;
+    int ret;
+    printf("%s", msg);
+    while ((ret = scanf("%d", &x)) != 1) {
+        int c;
+        if (ret == EOF) {
+            exit(EXIT_FAILURE);
+        }
+        while ((c = getchar()) != '\n' && c != EOF) {}
+        printf("Entrée invalide, réessayez : ");
+    }
+    return x;
 }
-les_etudiants[k].matricule=arris;
-printf("nouveau Nom : ");
-scanf("%s",&les_etudiants[k].nom);
-printf("nouveau Prenom : ");
-scanf("%s",&les_etudiants[k].prenom);
-printf("nouvelle date de naissance : ");
-do{ printf("le jour :");
-          scanf("%d",&les_etudiants[k].jour);
-          if((les_etudiants[k].jour>31)||(les_etudiants[k].jour==0)){
-          printf("le jour doit etre valide [1-31] ");
-          }
-     }while((les_etudiants[k].jour>31)||(les_etudiants[k].jour==0));
 
-     do{ printf("le mois :");
-          scanf("%d",&les_etudiants[k].mois);
-          if(les_etudiants[k].mois>12){
-          printf("le mois doit etre valide [1-12] ");
-          }
-     }while((les_etudiants[k].mois>12)||(les_etudiants[k].mois==0));
+static void lire_chaine(const char *msg, char *dest, int taille) {
+    int c;
+    printf("%s", msg);
+    // vider le buffer précédent
+    while ((c = getchar()) != '\n' && c != EOF) {}
+    if (fgets(dest, taille, stdin) != NULL) {
+        char *p = strchr(dest, '\n');
+        if (p) *p = '\0';
+    } else {
+        dest[0] = '\0';
+    }
+}
 
+static void show_text_window(const char *title, const char *text) {
+#ifdef _WIN32
+    MessageBoxA(NULL, text, title, MB_OK | MB_ICONINFORMATION);
+#else
+    // Sur autres systèmes : on ne fait rien, pour éviter les warnings
+    (void)title;
+    (void)text;
+#endif
+}
 
-     do{ printf("l annee : ");
-          scanf("%d",&les_etudiants[k].annee);
-          if(les_etudiants[k].annee>=2024){
-          printf("l annee doit etre valide ");
-          }
-     }while((les_etudiants[k].annee==0)||(les_etudiants[k].annee>=2024));
-printf("nouveau lieu de naissace : ");
-gets(gets(les_etudiants[k].lieu_de_naissance));
-printf("nouvelle adresse : ");
-scanf("%s",&les_etudiants[k].adresse);
-for(i=1;i<=n;i++){
-          if(etudiants2[i].matricule2==mat)
-               k=i;
-     }
-     etudiants2[k].matricule2=les_etudiants[k].matricule;
-     strcpy(etudiants2[k].nom2,les_etudiants[k].nom);
-     strcpy(etudiants2[k].adresse2,les_etudiants[k].adresse);
-     strcpy(etudiants2[k].prenom2,les_etudiants[k].prenom);
-     strcpy(etudiants2[k].lieu_de_naissance2,les_etudiants[k].lieu_de_naissance);
-     etudiants2[k].jour2=les_etudiants[k].jour;
-     etudiants2[k].annee2=les_etudiants[k].annee;
-     etudiants2[k].mois2=les_etudiants[k].mois;
-     printf("voulez vous le modifier au niveau du fichier aussi ? (oui 0/non 1) : ");
-     scanf("%d",&y);
-     if(y==0){
-                    f=fopen("etudiants.txt","w");
-                    fprintf(f,"la list des etudiants : \n\n");
-                    fprintf(f,"matricule | nom | prenom | date de naissance | lieu de naissance | adresse \n\n");
-                    for(i=1;i<=n;i++){
-          fprintf(f, "%d | %s | %s | %d/%d/%d | %s | %s\n", les_etudiants[i].matricule, les_etudiants[i].nom, les_etudiants[i].prenom, les_etudiants[i].jour, les_etudiants[i].mois, les_etudiants[i].annee,les_etudiants[i].lieu_de_naissance, les_etudiants[i].adresse);
+static void append_line(char *buffer, size_t size, const char *fmt, ...) {
+    size_t len = strlen(buffer);
+    if (len >= size - 1) return;
+
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(buffer + len, size - len, fmt, ap);
+    va_end(ap);
+}
+
+//======================================================================
+// Ecriture du fichier des notes
+//======================================================================
+
+void reglage(void) {
+    FILE *nt = fopen("notes.txt", "w");
+    if (!nt) {
+        printf("Erreur lors de l'ouverture de notes.txt\n");
+        return;
+    }
+
+    fprintf(nt, "les notes des etudiants : \n\n");
+    fprintf(nt, "matricule | nom prenom | notes \n\n");
+
+    for (int i = 1; i <= n; ++i) {
+        fprintf(nt, "%d | %s %s | ",
+                etudiants[i].matricule,
+                etudiants[i].nom,
+                etudiants[i].prenom);
+
+        for (int j = 1; j <= nm; ++j) {
+            fprintf(nt, "%s : %0.2f  ", modules[j].nom, notes[i][j]);
+        }
+        fprintf(nt, "\n");
+    }
+
+    fclose(nt);
+}
+
+//======================================================================
+// Etudiants
+//======================================================================
+
+void saisir_des_etudiant(void) {
+    FILE *f = fopen("etudiants.txt", "a");
+    if (!f) {
+        printf("Erreur d'ouverture du fichier etudiants.txt.\n");
+        return;
+    }
+
+    int nb = lire_int_sure("Entrer le nombre des etudiants que vous voulez saisir : ");
+    printf("\n");
+
+    fprintf(f, "la liste des etudiants : \n\n");
+    fprintf(f, "matricule | nom | prenom | date de naissance | lieu de naissance | adresse \n\n");
+
+    for (int k = 0; k < nb && n < MAX_ETUDIANTS; ++k) {
+        int idx = n + 1;
+        int matricule_ok = 0;
+
+        printf("Saisir les informations de l'etudiant numero %d :\n\n", idx);
+
+        // Matricule unique
+        while (!matricule_ok) {
+            etudiants[idx].matricule = lire_int_sure("matricule : ");
+            matricule_ok = 1;
+            for (int j = 1; j <= n; ++j) {
+                if (etudiants[idx].matricule == etudiants[j].matricule) {
+                    printf("Ce matricule est déjà utilisé, réessayez.\n");
+                    matricule_ok = 0;
+                    break;
+                }
+            }
+        }
+
+        // Nom / Prenom
+        printf("Nom : ");
+        scanf("%29s", etudiants[idx].nom);
+
+        printf("Prenom : ");
+        scanf("%29s", etudiants[idx].prenom);
+
+        // Date de naissance
+        do {
+            etudiants[idx].jour = lire_int_sure("Jour de naissance [1-31] : ");
+        } while (etudiants[idx].jour < 1 || etudiants[idx].jour > 31);
+
+        do {
+            etudiants[idx].mois = lire_int_sure("Mois de naissance [1-12] : ");
+        } while (etudiants[idx].mois < 1 || etudiants[idx].mois > 12);
+
+        do {
+            etudiants[idx].annee = lire_int_sure("Annee de naissance (< 2024) : ");
+        } while (etudiants[idx].annee <= 0 || etudiants[idx].annee >= 2024);
+
+        // Lieu / Adresse
+        printf("Lieu de naissance (un seul mot) : ");
+        scanf("%29s", etudiants[idx].lieu_de_naissance);
+
+        lire_chaine("Adresse : ", etudiants[idx].adresse, MAX_ADDR_LEN);
+
+        fprintf(f, "%d | %s | %s | %d/%d/%d | %s | %s\n",
+                etudiants[idx].matricule,
+                etudiants[idx].nom,
+                etudiants[idx].prenom,
+                etudiants[idx].jour,
+                etudiants[idx].mois,
+                etudiants[idx].annee,
+                etudiants[idx].lieu_de_naissance,
+                etudiants[idx].adresse);
+
+        ++n;
+    }
+
+    fclose(f);
+    sync_etudiants_view();
+}
+
+void afficher_les_etudiants(void) {
+    system("cls");
+    if (n == 0) {
+        printf("La liste est vide.\n");
+        return;
+    }
+
+    char buffer[MAX_BUFFER_FENETRE];
+    buffer[0] = '\0';
+    append_line(buffer, sizeof(buffer), "Liste des etudiants :\n");
+
+    for (int i = 1; i <= n; ++i) {
+        printf("\n");
+        printf("Etudiant :\n");
+        printf("Matricule : %d\n", etudiants[i].matricule);
+        printf("Nom       : %s\n", etudiants[i].nom);
+        printf("Prenom    : %s\n", etudiants[i].prenom);
+        printf("Naissance : %d/%d/%d\n",
+               etudiants[i].jour, etudiants[i].mois, etudiants[i].annee);
+        printf("Lieu      : %s\n", etudiants[i].lieu_de_naissance);
+        printf("Adresse   : %s\n", etudiants[i].adresse);
+
+        append_line(buffer, sizeof(buffer),
+                    "\nMatricule: %d\nNom: %s\nPrenom: %s\nNaissance: %d/%d/%d\nLieu: %s\nAdresse: %s\n",
+                    etudiants[i].matricule,
+                    etudiants[i].nom,
+                    etudiants[i].prenom,
+                    etudiants[i].jour,
+                    etudiants[i].mois,
+                    etudiants[i].annee,
+                    etudiants[i].lieu_de_naissance,
+                    etudiants[i].adresse);
+    }
+
+    // Fenêtre avec la liste
+    show_text_window("Liste des etudiants", buffer);
+}
+
+void modifier(void) {
+    if (n == 0) {
+        printf("La liste est vide.\n");
+        return;
+    }
+
+    FILE *f;
+    int mat, k = 0;
+
+    printf("Liste des etudiants enregistres :\n");
+    for (int i = 1; i <= n; ++i) {
+        printf("Matricule: %d  Etudiant: %s %s\n",
+               etudiants[i].matricule, etudiants[i].nom, etudiants[i].prenom);
+    }
+
+    while (k == 0) {
+        mat = lire_int_sure("\nSaisir le matricule de l'etudiant a modifier : ");
+        for (int i = 1; i <= n; ++i) {
+            if (etudiants[i].matricule == mat) {
+                k = i;
+                break;
+            }
+        }
+        if (k == 0) {
+            printf("Aucun etudiant avec ce matricule. Reessayez.\n");
+        }
+    }
+
+    // Nouveau matricule unique
+    int ok = 0;
+    while (!ok) {
+        etudiants[k].matricule = lire_int_sure("Nouveau matricule : ");
+        ok = 1;
+        for (int i = 1; i <= n; ++i) {
+            if (i != k && etudiants[i].matricule == etudiants[k].matricule) {
+                printf("Matricule deja utilise, reessayez.\n");
+                ok = 0;
+                break;
+            }
+        }
+    }
+
+    printf("Nouveau Nom : ");
+    scanf("%29s", etudiants[k].nom);
+
+    printf("Nouveau Prenom : ");
+    scanf("%29s", etudiants[k].prenom);
+
+    do {
+        etudiants[k].jour = lire_int_sure("Jour de naissance [1-31] : ");
+    } while (etudiants[k].jour < 1 || etudiants[k].jour > 31);
+
+    do {
+        etudiants[k].mois = lire_int_sure("Mois de naissance [1-12] : ");
+    } while (etudiants[k].mois < 1 || etudiants[k].mois > 12);
+
+    do {
+        etudiants[k].annee = lire_int_sure("Annee de naissance (< 2024) : ");
+    } while (etudiants[k].annee <= 0 || etudiants[k].annee >= 2024);
+
+    printf("Nouveau lieu de naissance (un seul mot) : ");
+    scanf("%29s", etudiants[k].lieu_de_naissance);
+
+    lire_chaine("Nouvelle adresse : ", etudiants[k].adresse, MAX_ADDR_LEN);
+
+    sync_etudiants_view();
+
+    int y = lire_int_sure("Mettre a jour le fichier etudiants.txt ? (0=oui / 1=non) : ");
+    if (y == 0) {
+        f = fopen("etudiants.txt", "w");
+        if (!f) {
+            printf("Erreur d'ouverture du fichier etudiants.txt.\n");
+        } else {
+            fprintf(f, "la liste des etudiants : \n\n");
+            fprintf(f, "matricule | nom | prenom | date de naissance | lieu de naissance | adresse \n\n");
+            for (int i = 1; i <= n; ++i) {
+                fprintf(f, "%d | %s | %s | %d/%d/%d | %s | %s\n",
+                        etudiants[i].matricule,
+                        etudiants[i].nom,
+                        etudiants[i].prenom,
+                        etudiants[i].jour,
+                        etudiants[i].mois,
+                        etudiants[i].annee,
+                        etudiants[i].lieu_de_naissance,
+                        etudiants[i].adresse);
+            }
+            fclose(f);
+        }
+    }
+
+    reglage();
+}
+
+void supprimer(void) {
+    if (n == 0) {
+        printf("La liste est vide.\n");
+        return;
+    }
+
+    int mat, k = 0;
+
+    printf("Liste des etudiants enregistres :\n");
+    for (int i = 1; i <= n; ++i) {
+        printf("Matricule: %d  Etudiant: %s %s\n",
+               etudiants[i].matricule, etudiants[i].nom, etudiants[i].prenom);
+    }
+
+    mat = lire_int_sure("\nSaisir le matricule de l'etudiant a supprimer : ");
+
+    for (int i = 1; i <= n; ++i) {
+        if (etudiants[i].matricule == mat) {
+            k = i;
+            break;
+        }
+    }
+
+    if (k == 0) {
+        printf("Aucun etudiant avec ce matricule.\n");
+        return;
+    }
+
+    for (int j = k; j < n; ++j) {
+        etudiants[j] = etudiants[j + 1];
+    }
+    --n;
+
+    sync_etudiants_view();
+
+    int y = lire_int_sure("Supprimer aussi dans le fichier etudiants.txt ? (0=oui / 1=non) : ");
+    if (y == 0) {
+        FILE *f = fopen("etudiants.txt", "w");
+        if (!f) {
+            printf("Erreur d'ouverture du fichier etudiants.txt.\n");
+        } else {
+            fprintf(f, "la liste des etudiants : \n\n");
+            fprintf(f, "matricule | nom | prenom | date de naissance | lieu de naissance | adresse \n\n");
+            for (int i = 1; i <= n; ++i) {
+                fprintf(f, "%d | %s | %s | %d/%d/%d | %s | %s\n",
+                        etudiants[i].matricule,
+                        etudiants[i].nom,
+                        etudiants[i].prenom,
+                        etudiants[i].jour,
+                        etudiants[i].mois,
+                        etudiants[i].annee,
+                        etudiants[i].lieu_de_naissance,
+                        etudiants[i].adresse);
+            }
+            fclose(f);
+        }
+    }
+
+    reglage();
+}
+
+void ajouter(void) {
+    if (n >= MAX_ETUDIANTS) {
+        printf("Nombre maximal d'etudiants atteint.\n");
+        return;
+    }
+
+    int idx = n + 1;
+    int matricule_ok = 0;
+
+    printf("\nSaisir les informations de l'etudiant :\n\n");
+
+    // Matricule unique
+    while (!matricule_ok) {
+        etudiants[idx].matricule = lire_int_sure("matricule : ");
+        matricule_ok = 1;
+        for (int j = 1; j <= n; ++j) {
+            if (etudiants[idx].matricule == etudiants[j].matricule) {
+                printf("Ce matricule est déjà utilise, reessayez.\n");
+                matricule_ok = 0;
+                break;
+            }
+        }
+    }
+
+    printf("Nom : ");
+    scanf("%29s", etudiants[idx].nom);
+
+    printf("Prenom : ");
+    scanf("%29s", etudiants[idx].prenom);
+
+    do {
+        etudiants[idx].jour = lire_int_sure("Jour de naissance [1-31] : ");
+    } while (etudiants[idx].jour < 1 || etudiants[idx].jour > 31);
+
+    do {
+        etudiants[idx].mois = lire_int_sure("Mois de naissance [1-12] : ");
+    } while (etudiants[idx].mois < 1 || etudiants[idx].mois > 12);
+
+    do {
+        etudiants[idx].annee = lire_int_sure("Annee de naissance (< 2024) : ");
+    } while (etudiants[idx].annee <= 0 || etudiants[idx].annee >= 2024);
+
+    printf("Lieu de naissance (un seul mot) : ");
+    scanf("%29s", etudiants[idx].lieu_de_naissance);
+
+    lire_chaine("Adresse : ", etudiants[idx].adresse, MAX_ADDR_LEN);
+
+    ++n;
+    sync_etudiants_view();
+
+    int y = lire_int_sure("Ajouter aussi dans le fichier etudiants.txt ? (0=oui / 1=non) : ");
+    if (y == 0) {
+        FILE *f = fopen("etudiants.txt", "a");
+        if (!f) {
+            printf("Erreur d'ouverture du fichier etudiants.txt.\n");
+        } else {
+            fprintf(f, "%d | %s | %s | %d/%d/%d | %s | %s\n",
+                    etudiants[idx].matricule,
+                    etudiants[idx].nom,
+                    etudiants[idx].prenom,
+                    etudiants[idx].jour,
+                    etudiants[idx].mois,
+                    etudiants[idx].annee,
+                    etudiants[idx].lieu_de_naissance,
+                    etudiants[idx].adresse);
+            fclose(f);
+        }
+    }
+
+    printf("\n");
+}
+
+//======================================================================
+// Tri des étudiants par nom + fenêtre
+//======================================================================
+
+void trier_ordre_alphabetique_ascendent(void) {
+    if (n == 0) {
+        printf("La liste est vide.\n");
+        return;
+    }
+
+    sync_etudiants_view();
+
+    for (int i = 1; i <= n - 1; ++i) {
+        for (int j = 1; j <= n - i; ++j) {
+            if (strcoll(etudiants2[j].nom, etudiants2[j + 1].nom) > 0) {
+                EtudiantView tmp = etudiants2[j];
+                etudiants2[j] = etudiants2[j + 1];
+                etudiants2[j + 1] = tmp;
+            }
+        }
+    }
+
+    char buffer[MAX_BUFFER_FENETRE];
+    buffer[0] = '\0';
+    append_line(buffer, sizeof(buffer), "Etudiants (ordre alphabetique ascendant) :\n");
+
+    printf("Les etudiants tries par nom (ascendant) :\n\n");
+    for (int i = 1; i <= n; ++i) {
+        printf("\nMatricule : %d\n", etudiants2[i].matricule);
+        printf("Nom       : %s\n", etudiants2[i].nom);
+        printf("Prenom    : %s\n", etudiants2[i].prenom);
+        printf("Naissance : %d/%d/%d\n",
+               etudiants2[i].jour, etudiants2[i].mois, etudiants2[i].annee);
+        printf("Lieu      : %s\n", etudiants2[i].lieu_de_naissance);
+        printf("Adresse   : %s\n", etudiants2[i].adresse);
+
+        append_line(buffer, sizeof(buffer),
+                    "\nMatricule: %d\nNom: %s\nPrenom: %s\nNaissance: %d/%d/%d\nLieu: %s\nAdresse: %s\n",
+                    etudiants2[i].matricule,
+                    etudiants2[i].nom,
+                    etudiants2[i].prenom,
+                    etudiants2[i].jour,
+                    etudiants2[i].mois,
+                    etudiants2[i].annee,
+                    etudiants2[i].lieu_de_naissance,
+                    etudiants2[i].adresse);
+    }
+
+    show_text_window("Etudiants - ordre alphabetique ascendant", buffer);
+}
+
+void trier_ordre_alphabetique_descendant(void) {
+    if (n == 0) {
+        printf("La liste est vide.\n");
+        return;
+    }
+
+    sync_etudiants_view();
+
+    for (int i = 1; i <= n - 1; ++i) {
+        for (int j = 1; j <= n - i; ++j) {
+            if (strcoll(etudiants2[j].nom, etudiants2[j + 1].nom) < 0) {
+                EtudiantView tmp = etudiants2[j];
+                etudiants2[j] = etudiants2[j + 1];
+                etudiants2[j + 1] = tmp;
+            }
+        }
+    }
+
+    char buffer[MAX_BUFFER_FENETRE];
+    buffer[0] = '\0';
+    append_line(buffer, sizeof(buffer), "Etudiants (ordre alphabetique descendant) :\n");
+
+    printf("Les etudiants tries par nom (descendant) :\n\n");
+    for (int i = 1; i <= n; ++i) {
+        printf("\nMatricule : %d\n", etudiants2[i].matricule);
+        printf("Nom       : %s\n", etudiants2[i].nom);
+        printf("Prenom    : %s\n", etudiants2[i].prenom);
+        printf("Naissance : %d/%d/%d\n",
+               etudiants2[i].jour, etudiants2[i].mois, etudiants2[i].annee);
+        printf("Lieu      : %s\n", etudiants2[i].lieu_de_naissance);
+        printf("Adresse   : %s\n", etudiants2[i].adresse);
+
+        append_line(buffer, sizeof(buffer),
+                    "\nMatricule: %d\nNom: %s\nPrenom: %s\nNaissance: %d/%d/%d\nLieu: %s\nAdresse: %s\n",
+                    etudiants2[i].matricule,
+                    etudiants2[i].nom,
+                    etudiants2[i].prenom,
+                    etudiants2[i].jour,
+                    etudiants2[i].mois,
+                    etudiants2[i].annee,
+                    etudiants2[i].lieu_de_naissance,
+                    etudiants2[i].adresse);
+    }
+
+    show_text_window("Etudiants - ordre alphabetique descendant", buffer);
+}
+
+//======================================================================
+// Modules
+//======================================================================
+
+void saisir_les_modules(void) {
+    FILE *m = fopen("modules.txt", "w");
+    if (!m) {
+        printf("Erreur d'ouverture de modules.txt.\n");
+        return;
+    }
+
+    int nb = lire_int_sure("Entrer le nombre de modules que vous voulez saisir : ");
+    printf("\n");
+
+    fprintf(m, "la liste des modules : \n\n");
+    fprintf(m, "code | Nom | coefficient \n\n");
+
+    for (int k = 0; k < nb && nm < MAX_MODULES; ++k) {
+        int idx = nm + 1;
+        int code_ok = 0;
+
+        printf("Saisir les informations du module numero %d :\n\n", idx);
+
+        while (!code_ok) {
+            modules[idx].code = lire_int_sure("code : ");
+            code_ok = 1;
+            for (int j = 1; j <= nm; ++j) {
+                if (modules[idx].code == modules[j].code) {
+                    printf("Code deja utilise, reessayez.\n");
+                    code_ok = 0;
+                    break;
+                }
+            }
+        }
+
+        printf("Nom : ");
+        scanf("%49s", modules[idx].nom);
+
+        modules[idx].coef = lire_int_sure("coefficient : ");
+        modules[idx].moy  = 0.0f;
+
+        fprintf(m, "%d | %s | %d\n",
+                modules[idx].code, modules[idx].nom, modules[idx].coef);
+
+        ++nm;
+    }
+
+    fclose(m);
+    sync_modules_view();
+}
+
+void ajouter_modules(void) {
+    if (nm >= MAX_MODULES) {
+        printf("Nombre maximal de modules atteint.\n");
+        return;
+    }
+
+    FILE *m = fopen("modules.txt", "a");
+    if (!m) {
+        printf("Erreur d'ouverture de modules.txt.\n");
+        return;
+    }
+
+    int idx = nm + 1;
+    int code_ok = 0;
+
+    printf("Saisir les informations du module numero %d :\n\n", idx);
+
+    while (!code_ok) {
+        modules[idx].code = lire_int_sure("code : ");
+        code_ok = 1;
+        for (int j = 1; j <= nm; ++j) {
+            if (modules[idx].code == modules[j].code) {
+                printf("Code deja utilise, reessayez.\n");
+                code_ok = 0;
+                break;
+            }
+        }
+    }
+
+    printf("Nom : ");
+    scanf("%49s", modules[idx].nom);
+
+    modules[idx].coef = lire_int_sure("coefficient : ");
+    modules[idx].moy  = 0.0f;
+
+    fprintf(m, "%d | %s | %d\n",
+            modules[idx].code, modules[idx].nom, modules[idx].coef);
+
+    ++nm;
+
+    fclose(m);
+    sync_modules_view();
+}
+
+void modifier_module(void) {
+    if (nm == 0) {
+        printf("La liste des modules est vide.\n");
+        return;
+    }
+
+    printf("Liste des modules :\n");
+    for (int i = 1; i <= nm; ++i) {
+        printf("code : %d   nom : %s\n", modules[i].code, modules[i].nom);
+    }
+
+    int cod = lire_int_sure("\nSaisir le code du module a modifier : ");
+    int k = 0;
+
+    for (int i = 1; i <= nm; ++i) {
+        if (modules[i].code == cod) {
+            k = i;
+            break;
+        }
+    }
+
+    if (k == 0) {
+        printf("Aucun module avec ce code.\n");
+        return;
+    }
+
+    // nouveau code unique
+    int ok = 0;
+    while (!ok) {
+        modules[k].code = lire_int_sure("Nouveau code : ");
+        ok = 1;
+        for (int j = 1; j <= nm; ++j) {
+            if (j != k && modules[j].code == modules[k].code) {
+                printf("Code deja utilise, reessayez.\n");
+                ok = 0;
+                break;
+            }
+        }
+    }
+
+    printf("Nouveau nom : ");
+    scanf("%49s", modules[k].nom);
+
+    modules[k].coef = lire_int_sure("Nouveau coefficient : ");
+
+    sync_modules_view();
+
+    FILE *md = fopen("modules.txt", "w");
+    if (!md) {
+        printf("Erreur d'ouverture de modules.txt.\n");
+        return;
+    }
+
+    fprintf(md, "la liste des modules : \n\n");
+    fprintf(md, "code | Nom | coefficient \n\n");
+    for (int i = 1; i <= nm; ++i) {
+        fprintf(md, "%d | %s | %d\n",
+                modules[i].code, modules[i].nom, modules[i].coef);
+    }
+
+    fclose(md);
+}
+
+void supprimer_module(void) {
+    if (nm == 0) {
+        printf("La liste des modules est vide.\n");
+        return;
+    }
+
+    printf("Liste des modules :\n");
+    for (int i = 1; i <= nm; ++i) {
+        printf("code : %d   nom : %s\n", modules[i].code, modules[i].nom);
+    }
+
+    int cod = lire_int_sure("\nSaisir le code du module a supprimer : ");
+    int k = 0;
+
+    for (int i = 1; i <= nm; ++i) {
+        if (modules[i].code == cod) {
+            k = i;
+            break;
+        }
+    }
+
+    if (k == 0) {
+        printf("Aucun module avec ce code.\n");
+        return;
+    }
+
+    for (int j = k; j < nm; ++j) {
+        modules[j] = modules[j + 1];
+    }
+    --nm;
+
+    sync_modules_view();
+
+    FILE *m = fopen("modules.txt", "w");
+    if (!m) {
+        printf("Erreur d'ouverture de modules.txt.\n");
+        return;
+    }
+
+    fprintf(m, "la liste des modules : \n\n");
+    fprintf(m, "code | Nom | coefficient \n\n");
+    for (int i = 1; i <= nm; ++i) {
+        fprintf(m, "%d | %s | %d\n",
+                modules[i].code, modules[i].nom, modules[i].coef);
+    }
+
+    fclose(m);
+}
+
+void afficher_les_modules(void) {
+    if (nm == 0) {
+        printf("La liste des modules est vide.\n");
+        return;
+    }
+
+    for (int i = 1; i <= nm; ++i) {
+        printf("\nNom du module: %s\tCode: %d\tCoefficient: %d\n",
+               modules[i].nom, modules[i].code, modules[i].coef);
+    }
+}
+
+//======================================================================
+// Tri modules par nom
+//======================================================================
+
+void trier_module_par_nom_ascendent(void) {
+    if (nm == 0) {
+        printf("La liste des modules est vide.\n");
+        return;
+    }
+
+    sync_modules_view();
+
+    for (int i = 1; i <= nm - 1; ++i) {
+        for (int j = 1; j <= nm - i; ++j) {
+            if (strcoll(modules2[j].nom, modules2[j + 1].nom) > 0) {
+                ModuleView tmp = modules2[j];
+                modules2[j] = modules2[j + 1];
+                modules2[j + 1] = tmp;
+            }
+        }
+    }
+
+    printf("Modules tries par nom (ascendant) :\n");
+    for (int i = 1; i <= nm; ++i) {
+        printf("\nNom : %s\tCode : %d\tCoefficient : %d\n",
+               modules2[i].nom, modules2[i].code, modules2[i].coef);
+    }
+}
+
+void trier_module_par_nom_descendant(void) {
+    if (nm == 0) {
+        printf("La liste des modules est vide.\n");
+        return;
+    }
+
+    sync_modules_view();
+
+    for (int i = 1; i <= nm - 1; ++i) {
+        for (int j = 1; j <= nm - i; ++j) {
+            if (strcoll(modules2[j].nom, modules2[j + 1].nom) < 0) {
+                ModuleView tmp = modules2[j];
+                modules2[j] = modules2[j + 1];
+                modules2[j + 1] = tmp;
+            }
+        }
+    }
+
+    printf("Modules tries par nom (descendant) :\n");
+    for (int i = 1; i <= nm; ++i) {
+        printf("\nNom : %s\tCode : %d\tCoefficient : %d\n",
+               modules2[i].nom, modules2[i].code, modules2[i].coef);
+    }
+}
+
+//======================================================================
+// Notes
+//======================================================================
+
+void saisir_les_notes(void) {
+    if (n == 0 || nm == 0) {
+        printf("Veuillez d'abord saisir etudiants et modules.\n");
+        return;
+    }
+
+    printf("Liste des etudiants :\n");
+    for (int i = 1; i <= n; ++i) {
+        printf("Matricule: %d  %s %s\n",
+               etudiants[i].matricule,
+               etudiants[i].nom,
+               etudiants[i].prenom);
+    }
+
+    int continuer = 1;
+    while (continuer == 1) {
+        int mat = lire_int_sure("\nDonnez le matricule de l'etudiant : ");
+        int pos = 0;
+
+        for (int i = 1; i <= n; ++i) {
+            if (etudiants[i].matricule == mat) {
+                pos = i;
+                break;
+            }
+        }
+
+        if (!pos) {
+            printf("Etudiant inexistant.\n");
+        } else {
+            printf("Saisie des notes pour %s %s :\n",
+                   etudiants[pos].nom, etudiants[pos].prenom);
+
+            for (int j = 1; j <= nm; ++j) {
+                float note_val;
+                do {
+                    printf("Module %s : ", modules[j].nom);
+                    int ret = scanf("%f", &note_val);
+                    if (ret != 1) {
+                        int c;
+                        while ((c = getchar()) != '\n' && c != EOF) {}
+                        note_val = -1.0f;
                     }
-          fclose(f);
-     }
-          reglage();
-}
-
-
-//*******************************procedure sup un etudiant*****************************************
-void supprimer(){
-
-     int j,mat,k;
-     printf("la liste des etudiants enregistre:\n");
-     if(n==0){
-          printf("la liste est vide ");
-     }
-
-     for(i=1;i<=n;i++){
-     printf("matricule: %d           etudiant:%s %s\n",les_etudiants[i].matricule,les_etudiants[i].nom,les_etudiants[i].prenom);
-     }
-     printf("\n \n");
-     printf("Saisir le matricule de l etudient que vous vouliez supprimier : ");
-     scanf("%d",&mat);
-
-     for(i=1;i<=n;i++){
-     if(les_etudiants[i].matricule==mat)
-     {
-               k=i;
-               n=n-1;
-               for(j=k;j<=n;j++){
-                         les_etudiants[j]=les_etudiants[j+1];
-               }
-          }
-     if(etudiants2[i].matricule2==mat){
-          k=i;
-
-               for(j=k;j<=n+1;j++){
-                         etudiants2[j]=etudiants2[j+1];
-               }
-     }
-     }
-     int y;
-     FILE *f;
-     printf("voulez vous le supprimé au niveau du fichier aussi ? (oui 0/non 1) : ");
-     scanf("%d",&y);
-     if(y==0){
-                    f=fopen("etudiants.txt","w");
-                    fprintf(f,"la list des etudiants : \n\n");
-                    fprintf(f,"matricule | nom | prenom | date de naissance | lieu de naissance | adresse \n\n");
-                    for(i=1;i<=n;i++){
-          fprintf(f, "%d | %s | %s | %d/%d/%d | %s | %s\n", les_etudiants[i].matricule, les_etudiants[i].nom, les_etudiants[i].prenom, les_etudiants[i].jour, les_etudiants[i].mois, les_etudiants[i].annee,les_etudiants[i].lieu_de_naissance, les_etudiants[i].adresse);
+                    if (note_val < 0.0f || note_val > 20.0f) {
+                        printf("La note doit etre entre 0 et 20.\n");
                     }
-          fclose(f);
-     }
-     reglage();
+                } while (note_val < 0.0f || note_val > 20.0f);
+
+                notes[pos][j] = note_val;
+            }
+        }
+
+        continuer = lire_int_sure("Saisir les notes d'un autre etudiant ? (1=oui / 0=non) : ");
+    }
+
+    reglage();
 }
 
-//*******************************procedure ajouter un etudiant****************************************
-void ajouter(){
-printf("\n\n");
-printf("Saisir les informations de votre etudiant :  \n\n");
-printf("matricule : ");
-scanf("%d",&les_etudiants[n+1].matricule);
-for(j=0;j<n+1;j++){
-          if(les_etudiants[n+1].matricule==les_etudiants[j].matricule){
-          printf("le matricule est deja utiliser saisissez un autre! : ");
-          scanf("%d",&les_etudiants[n+1].matricule);
-          }
-     }
-etudiants2[n+1].matricule2=les_etudiants[n+1].matricule;
-printf("Nom : ");
-scanf("%s",&les_etudiants[n+1].nom);
-strcpy(etudiants2[n+1].nom2,les_etudiants[n+1].nom);
-printf("Prenom : ");
-gets(gets(les_etudiants[n+1].prenom));
-strcpy(etudiants2[n+1].prenom2,les_etudiants[n+1].prenom);
-printf("date de naissance : ");
-do{ printf("le jour : ");
-          scanf("%d",&les_etudiants[n+1].jour);
-          if((les_etudiants[n+1].jour>31)||(les_etudiants[n+1].jour==0)){
-          printf("le jour doit etre valide [1-31] ");
-          }
-     }while((les_etudiants[n+1].jour>31)||(les_etudiants[n+1].jour==0));
+void afficher_les_notes(void) {
+    if (n == 0 || nm == 0) {
+        printf("Aucune note disponible.\n");
+        return;
+    }
 
-     do{ printf("le mois : ");
-          scanf("%d",&les_etudiants[n+1].mois);
-          if(les_etudiants[n+1].mois>12){
-          printf("le mois doit etre valide [1-12] ");
-          }
-     }while((les_etudiants[n+1].mois>12)||(les_etudiants[n+1].mois==0));
+    printf("Liste des etudiants :\n");
+    for (int i = 1; i <= n; ++i) {
+        printf("Matricule: %d  %s %s\n",
+               etudiants[i].matricule,
+               etudiants[i].nom,
+               etudiants[i].prenom);
+    }
 
+    int continuer = 1;
+    while (continuer == 1) {
+        int mat = lire_int_sure("\nDonnez le matricule de l'etudiant : ");
+        int pos = 0;
 
-     do{ printf("l annee : ");
-          scanf("%d",&les_etudiants[n+1].annee);
-          if(les_etudiants[n+1].annee>=2024){
-          printf("l annee doit etre valide ");
-          }
-     }while((les_etudiants[n+1].annee==0)||(les_etudiants[n+1].annee>=2024));
-etudiants2[n+1].jour2=les_etudiants[n+1].jour;
-etudiants2[n+1].mois2=les_etudiants[n+1].mois;
-etudiants2[n+1].annee2=les_etudiants[n+1].annee;
-printf("lieu de naissace : ");
-gets(gets(les_etudiants[n+1].lieu_de_naissance));
-strcpy(etudiants2[n+1].lieu_de_naissance2,les_etudiants[n+1].lieu_de_naissance);
-printf("adresse : ");
-scanf("%s",&les_etudiants[n+1].adresse);
-strcpy(etudiants2[n+1].adresse2,les_etudiants[n+1].adresse);
-n=n+1;
-FILE *f;
-int y;
-printf("voulez vous l'ajouter au niveau du fichier aussi ? (oui 0/non 1) : ");
-     scanf("%d",&y);
-     if(y==0){
-                    f=fopen("etudiants.txt","a");
+        for (int i = 1; i <= n; ++i) {
+            if (etudiants[i].matricule == mat) {
+                pos = i;
+                break;
+            }
+        }
 
-          fprintf(f, "%d | %s | %s | %d/%d/%d | %s | %s\n", les_etudiants[n].matricule, les_etudiants[n].nom, les_etudiants[n].prenom, les_etudiants[n].jour, les_etudiants[n].mois, les_etudiants[n].annee,les_etudiants[n].lieu_de_naissance, les_etudiants[n].adresse);
+        if (!pos) {
+            printf("Etudiant inexistant.\n");
+        } else {
+            printf("Notes de %s %s :\n",
+                   etudiants[pos].nom, etudiants[pos].prenom);
+            for (int j = 1; j <= nm; ++j) {
+                printf("-> %s : %0.2f\n", modules[j].nom, notes[pos][j]);
+            }
+        }
 
-          fclose(f);
-     }
-printf("\n\n");}
-
-//*******************************procedure POUR QUITTER*************************************************
-void quitter(){
-     system("cls");
-printf("\n\n        \t------------FIN-----------\n\n\n");
-printf("\n\n        \t------------MERCI-----------\n\n\n");
+        continuer = lire_int_sure("Afficher les notes d'un autre etudiant ? (1=oui / 0=non) : ");
+    }
 }
 
-//*******************************procedure de trie par nom************************************************
-void trier_ordre_alphabetique_ascendent(){
-     int h,t;
+//======================================================================
+// Moyennes étudiants (tri croissant / décroissant) + fenêtres
+//======================================================================
 
-     do{
-          h=0;
-          for(i=1;i<=n-1;i++){
-                    if(strcoll(etudiants2[i].nom2,etudiants2[i+1].nom2)>0){
-                    trier[i].matriculee=etudiants2[i].matricule2;
-                    trier[i].jourr=etudiants2[i].jour2;
-                    trier[i].anneee=etudiants2[i].annee2;
-                    trier[i].moiss=etudiants2[i].mois2;
-                    strcpy(trier[i].nomm,etudiants2[i].nom2);
-                    strcpy( trier[i].prenomm,etudiants2[i].prenom2);
-                    strcpy(trier[i].lieu_de_naissancee,etudiants2[i].lieu_de_naissance2);
-                    strcpy( trier[i].adressel,etudiants2[i].adresse2);
-                    etudiants2[i].matricule2=etudiants2[i+1].matricule2;
-                    strcpy( etudiants2[i].nom2,etudiants2[i+1].nom2);
-                    strcpy( etudiants2[i].prenom2,etudiants2[i+1].prenom2);
-                    strcpy( etudiants2[i].lieu_de_naissance2,etudiants2[i+1].lieu_de_naissance2);
-                    strcpy( etudiants2[i].adresse2,etudiants2[i+1].adresse2);
-                    etudiants2[i+1].matricule2=trier[i].matriculee;
-                    strcpy(  etudiants2[i+1].nom2, trier[i].nomm);
-                    strcpy( etudiants2[i+1].prenom2,trier[i].prenomm);
-                    strcpy( etudiants2[i+1].lieu_de_naissance2,trier[i].lieu_de_naissancee);
-                    strcpy( etudiants2[i+1].adresse2,trier[i].adressel);
-                    h++;}
-                    }
-     }while(h!=0);
-     printf("Les etudiants trier par nom : \n\n");
-     for(i=1;i<=n;i++)
-     {printf("\n");
-     printf("sa matricule :%d \n",etudiants2[i].matricule2);
-     printf("Son Nom : %s \n",etudiants2[i].nom2);
-     printf("son Prenom : %s \n",etudiants2[i].prenom2);
-     printf("sa date de naissance : %d / %d / %d \n",etudiants2[i].jour2,etudiants2[i].mois2,etudiants2[i].annee2);
-     printf("son lieu de naissance : %s \n",etudiants2[i].lieu_de_naissance2);
-     printf("son adresse : %s \n",etudiants2[i].adresse2);
-                    }
-     }
-void trier_ordre_alphabetique_descendant(){
-     int h,t;
+void afficher_moy_decroi(void) {
+    if (n == 0 || nm == 0) {
+        printf("Impossible de calculer les moyennes.\n");
+        return;
+    }
 
-     do{
-          h=0;
-          for(i=1;i<=n-1;i++){
-                    if(strcoll(etudiants2[i].nom2,etudiants2[i+1].nom2)<0){
-                    trier[i].matriculee=etudiants2[i].matricule2;
-                    trier[i].jourr=etudiants2[i].jour2;
-                    trier[i].anneee=etudiants2[i].annee2;
-                    trier[i].moiss=etudiants2[i].mois2;
-                    strcpy(trier[i].nomm,etudiants2[i].nom2);
-                    strcpy( trier[i].prenomm,etudiants2[i].prenom2);
-                    strcpy(trier[i].lieu_de_naissancee,etudiants2[i].lieu_de_naissance2);
-                    strcpy( trier[i].adressel,etudiants2[i].adresse2);
-                    etudiants2[i].matricule2=etudiants2[i+1].matricule2;
-                    strcpy( etudiants2[i].nom2,etudiants2[i+1].nom2);
-                    strcpy( etudiants2[i].prenom2,etudiants2[i+1].prenom2);
-                    strcpy( etudiants2[i].lieu_de_naissance2,etudiants2[i+1].lieu_de_naissance2);
-                    strcpy( etudiants2[i].adresse2,etudiants2[i+1].adresse2);
-                    etudiants2[i+1].matricule2=trier[i].matriculee;
-                    strcpy(  etudiants2[i+1].nom2, trier[i].nomm);
-                    strcpy( etudiants2[i+1].prenom2,trier[i].prenomm);
-                    strcpy( etudiants2[i+1].lieu_de_naissance2,trier[i].lieu_de_naissancee);
-                    strcpy( etudiants2[i+1].adresse2,trier[i].adressel);
-                    h++;}
-                    }
-     }while(h!=0);
-     printf("Les etudiants trier par nom : \n\n");
-     for(i=1;i<=n;i++)
-     {printf("\n");
-     printf("sa matricule :%d \n",etudiants2[i].matricule2);
-     printf("Son Nom : %s \n",etudiants2[i].nom2);
-     printf("son Prenom : %s \n",etudiants2[i].prenom2);
-     printf("sa date de naissance : %d / %d / %d \n",etudiants2[i].jour2,etudiants2[i].mois2,etudiants2[i].annee2);
-     printf("son lieu de naissance : %s \n",etudiants2[i].lieu_de_naissance2);
-     printf("son adresse : %s \n",etudiants2[i].adresse2);
-                    }
+    sync_etudiants_view();
 
-     }
+    for (int i = 1; i <= n; ++i) {
+        float s = 0.0f;
+        int coef_sum = 0;
+        for (int j = 1; j <= nm; ++j) {
+            s += notes[i][j] * modules[j].coef;
+            coef_sum += modules[j].coef;
+        }
+        etudiants2[i].moy = (coef_sum > 0) ? (s / coef_sum) : 0.0f;
+    }
 
+    for (int i = 1; i <= n - 1; ++i) {
+        for (int j = 1; j <= n - i; ++j) {
+            if (etudiants2[j].moy < etudiants2[j + 1].moy) {
+                EtudiantView tmp = etudiants2[j];
+                etudiants2[j] = etudiants2[j + 1];
+                etudiants2[j + 1] = tmp;
+            }
+        }
+    }
 
-//*******************************procedure saisir DES MODULES*********************************************
-void saisir_les_modules(){
-     FILE *m;
-     m=fopen("modules.txt","w");
-printf("Entrer le nombre de modules que vous vouliez saisir : ");
-scanf("%d",&nb);
-printf("\n\n");
+    char buffer[MAX_BUFFER_FENETRE];
+    buffer[0] = '\0';
+    append_line(buffer, sizeof(buffer), "Etudiants par moyenne decroissante :\n");
 
-fprintf(m,"la list des modules : \n\n");
-fprintf(m,"code | Nom | coeffesion \n\n");
+    printf("Etudiants tries par moyenne decroissante :\n");
+    for (int i = 1; i <= n; ++i) {
+        printf("\nMatricule : %d\n", etudiants2[i].matricule);
+        printf("Nom       : %s\n", etudiants2[i].nom);
+        printf("Prenom    : %s\n", etudiants2[i].prenom);
+        printf("Moyenne   : %0.2f\n", etudiants2[i].moy);
 
-for(i=1;i<=nb;i++){
+        append_line(buffer, sizeof(buffer),
+                    "\nMatricule: %d\nNom: %s\nPrenom: %s\nMoyenne: %0.2f\n",
+                    etudiants2[i].matricule,
+                    etudiants2[i].nom,
+                    etudiants2[i].prenom,
+                    etudiants2[i].moy);
+    }
 
-     printf("Saisir les informations du module numero %d :  \n\n",nm+1);
-     printf("code : ");
-     scanf("%d",&module[nm+1].code);
-     for(j=0;j<nm+1;j++){
-          if(module[nm+1].code==module[j].code){
-          printf("le code est deja utiliser saisissez un autre! : ");
-          scanf("%d",&module[nm+1].code);
-          }
-     }
-     printf("Nom : ");
-     scanf("%s",&module[nm+1].nom);
-     printf("coefficient : ");
-     scanf("%d",&module[nm+1].coef);
-
-
-     if (m == NULL) {
-          printf("Erreur d'ouverture du fichier.\n");
-          return;
-     }
-
-     fprintf(m, "%d | %s | %d\n", module[nm+1].code, module[nm+1].nom, module[nm+1].coef);
-
-
-     nm=nm+1;
-
-}
-fclose(m);
-for(i=1;i<=nm;i++){
-     module2[i].code2=module[i].code;
-     strcpy(module2[i].nom2,module[i].nom);
-     module2[i].coef2=module[i].coef;}
-
-
-          }
-
-          void ajouter_modules(){
-     FILE *m;
-     m=fopen("modules.txt","a");
-     printf("Saisir les informations du module numero %d :  \n\n",nm+1);
-     printf("code : ");
-     scanf("%d",&module[nm+1].code);
-     for(j=0;j<nm+1;j++){
-          if(module[nm+1].code==module[j].code){
-          printf("le code est deja utiliser saisissez un autre! : ");
-          scanf("%d",&module[nm+1].code);
-          }
-     }
-     printf("Nom : ");
-     scanf("%s",&module[nm+1].nom);
-     printf("coefficient : ");
-     scanf("%d",&module[nm+1].coef);
-
-
-     if (m == NULL) {
-          printf("Erreur d'ouverture du fichier.\n");
-          return;
-     }
-
-     fprintf(m, "%d | %s | %d\n", module[nm+1].code, module[nm+1].nom, module[nm+1].coef);
-
-
-     nm=nm+1;
-
-
-fclose(m);
-for(i=1;i<=nm;i++){
-     module2[i].code2=module[i].code;
-     strcpy(module2[i].nom2,module[i].nom);
-     module2[i].coef2=module[i].coef;}
-
-
-     }
-
-
-//*******************************procedure MODIFIER MODULES*********************************************
-void modifier_module(){
-     int cod,k,m;
-          printf("La liste des modules : \n");
-     if(nm==0){
-          printf("La liste des modules est vide!\n");
-     }
-     for(i=1;i<=nm;i++){
-          printf("code : %d           nom module : %s\n",module[i].code,module[i].nom);
-     }
-     printf("\n");
-     printf("Saisir le code du module que vous vouliez modifier : ");
-     scanf("%d",&cod);
-
-     for(i=1;i<=nm;i++){
-          if(module[i].code==cod)
-               k=i;
-     }
-     for(j=1;j<=nm;j++){
-          if(module2[j].code2==cod)
-               m=j;
-     }
-printf("code: ");
-scanf("%d",&module[k].code);
-for(j=0;j<k;j++){
-          if(module[k].code==module[j].code){
-          printf("le code est deja utiliser saisissez un autre! : ");
-          scanf("%d",&module[k].code);
-
-          }
-     }
-     for(j=k+1;j<=nm;j++){
-          if(module[k].code==module[j].code){
-          printf("le code est deja utiliser saisissez un autre! : ");
-          scanf("%d",&module[k].code);
-          }
-     }
-module2[m].code2=module[k].code;
-printf("Nom : ");
-scanf("%s",&module[k].nom);
-strcpy(module2[m].nom2,module[k].nom);
-printf("coeffeciant : ");
-scanf("%d",&module[k].coef);
-module2[m].coef2=module[k].coef;
-FILE *md;
-md=fopen("modules.txt","w");
-fprintf(md,"la list des modules : \n\n");
-fprintf(md,"code | Nom | coeffesion \n\n");
-for(i=1;i<=nm;i++){
-     fprintf(md, "%d | %s | %d\n", module[i].code, module[i].nom, module[i].coef);
-}
-fclose(md);
-
+    show_text_window("Etudiants - Moyenne decroissante", buffer);
 }
 
-//*******************************procedure SUP MODULES*************************************************
-void supprimer_module(){
+void afficher_moy_CROIS(void) {
+    if (n == 0 || nm == 0) {
+        printf("Impossible de calculer les moyennes.\n");
+        return;
+    }
 
-     int j,cod,k;
-     printf("La liste des modules : \n");
-     if(nm==0){
-          printf("La liste des modules est vide!\n");
-     }
-     for(i=1;i<=nm;i++){
-          printf("code : %d           nom module : %s\n",module[i].code,module[i].nom);
-     }
-     printf("\n");
-     printf("Saisir le code du module que vous vouliez supprimer : ");
-     scanf("%d",&cod);
+    sync_etudiants_view();
 
-     for(i=1;i<=nm;i++){
-     if(module[i].code==cod)
-     {
-               k=i;
-               nm=nm-1;
-               for(j=k;j<=nm;j++){
-                         module[j]=module[j+1];
-               }
-          }
+    for (int i = 1; i <= n; ++i) {
+        float s = 0.0f;
+        int coef_sum = 0;
+        for (int j = 1; j <= nm; ++j) {
+            s += notes[i][j] * modules[j].coef;
+            coef_sum += modules[j].coef;
+        }
+        etudiants2[i].moy = (coef_sum > 0) ? (s / coef_sum) : 0.0f;
+    }
 
-     }
-     for(i=1;i<=nm;i++){
-     if(module2[i].code2==cod)
-     {
-               k=i;
-               for(j=k;j<=nm;j++){
-                         module2[j]=module2[j+1];
-               }
-          }
+    for (int i = 1; i <= n - 1; ++i) {
+        for (int j = 1; j <= n - i; ++j) {
+            if (etudiants2[j].moy > etudiants2[j + 1].moy) {
+                EtudiantView tmp = etudiants2[j];
+                etudiants2[j] = etudiants2[j + 1];
+                etudiants2[j + 1] = tmp;
+            }
+        }
+    }
 
-     }
+    char buffer[MAX_BUFFER_FENETRE];
+    buffer[0] = '\0';
+    append_line(buffer, sizeof(buffer), "Etudiants par moyenne croissante :\n");
 
-     FILE *m;
-m=fopen("modules.txt","w");
-fprintf(m,"la list des modules : \n\n");
-fprintf(m,"code | Nom | coeffesion \n\n");
-for(i=1;i<=nm;i++){
-     fprintf(m, "%d | %s | %d\n", module[i].code, module[i].nom, module[i].coef);
-}
-fclose(m);
-}
+    printf("Etudiants tries par moyenne croissante :\n");
+    for (int i = 1; i <= n; ++i) {
+        printf("\nMatricule : %d\n", etudiants2[i].matricule);
+        printf("Nom       : %s\n", etudiants2[i].nom);
+        printf("Prenom    : %s\n", etudiants2[i].prenom);
+        printf("Moyenne   : %0.2f\n", etudiants2[i].moy);
 
-//*******************************procedure AFFICHER LES MODULES*******************************
-void afficher_les_modules(){
-     if(nm==0){
-          printf("La liste des modules est vide!");
-     }
-for(i=1;i<=nm;i++){ printf("\n");
-     printf("nom du module: %s \t code: %d \t coeffission: %d\n",module[i].nom,module[i].code,module[i].coef);
-}
+        append_line(buffer, sizeof(buffer),
+                    "\nMatricule: %d\nNom: %s\nPrenom: %s\nMoyenne: %0.2f\n",
+                    etudiants2[i].matricule,
+                    etudiants2[i].nom,
+                    etudiants2[i].prenom,
+                    etudiants2[i].moy);
+    }
+
+    show_text_window("Etudiants - Moyenne croissante", buffer);
 }
 
-//*******************************procedure trie des module par nom*******************************
-void trier_module_par_nom_ascendent(){
-     int h,t;
+//======================================================================
+// Moyennes modules (tri croissant / décroissant)
+//======================================================================
 
-     do{
-          h=0;
-          for(i=1;i<=nm-1;i++){
-                    if(strcoll(module2[i].nom2,module2[i+1].nom2)>0){
-                    trier[i].codef=module2[i].code2;
-                    trier[i].coeff=module2[i].coef2;
-                    strcpy(trier[i].nomf,module2[i].nom2);
+void moyenne_module_crois(void) {
+    if (n == 0 || nm == 0) {
+        printf("Impossible de calculer les moyennes de modules.\n");
+        return;
+    }
 
-                    module2[i].code2=module2[i+1].code2;
-                    module2[i].coef2=module2[i+1].coef2;
-                    strcpy( module2[i].nom2,module2[i+1].nom2);
-                    module2[i+1].code2=trier[i].codef;
-                    module2[i+1].coef2=trier[i].coeff;
-                    strcpy(  module2[i+1].nom2,trier[i].nomf);
-                    h++;}
-                    }
-     }while(h!=0);
-     printf("Les module trier par nom (ascendent) : \n\n");
-     for(i=1;i<=nm;i++){ printf("\n");
-     printf("nom du module: %s \t code: %d \t coeffission: %d\n",module2[i].nom2,module2[i].code2,module2[i].coef2);
-}
-     }
-void trier_module_par_nom_descendant(){
-     int h,t;
+    sync_modules_view();
 
-     do{
-          h=0;
-          for(i=1;i<=nm-1;i++){
-                    if(strcoll(module2[i].nom2,module2[i+1].nom2)<0){
-                    trier[i].codef=module2[i].code2;
-                    trier[i].coeff=module2[i].coef2;
-                    strcpy(trier[i].nomf,module2[i].nom2);
-                    module2[i].code2=module2[i+1].code2;
-                    module2[i].coef2=module2[i+1].coef2;
-                    strcpy( module2[i].nom2,module2[i+1].nom2);
-                    module2[i+1].code2=trier[i].codef;
-                    module2[i+1].coef2=trier[i].coeff;
-                    strcpy(  module2[i+1].nom2,trier[i].nomf);
-                    h++;}
-                    }
-     }while(h!=0);
-     printf("Les module trier par nom (descendant) : \n\n");
-     for(i=1;i<=nm;i++){ printf("\n");
-     printf("nom du module: %s \t code: %d \t coeffission: %d\n",module2[i].nom2,module2[i].code2,module2[i].coef2);
-}
-     }
+    for (int j = 1; j <= nm; ++j) {
+        float s = 0.0f;
+        int c = 0;
+        for (int i = 1; i <= n; ++i) {
+            s += notes[i][j];
+            ++c;
+        }
+        modules2[j].moy = (c > 0) ? (s / c) : 0.0f;
+    }
 
-//*******************************procedure saisir les notes*******************************
-void saisir_les_notes(){
-     int mat,x;
-     printf("la liste des etudiants enregistre:\n");
-     for(i=1;i<=n;i++){
-     printf("matricule: %d           etudiant:%s %s\n",les_etudiants[i].matricule,les_etudiants[i].nom,les_etudiants[i].prenom);
-     }
-     printf("\n \n");
-     do{
-     printf("donnez le matricule de l'etudiant : ");
-     scanf("%d",&mat);
-     for(int i=1;i<=n;i++){
-          if(les_etudiants[i].matricule==mat){
-               note[i].matriculenote=mat;
-               strcpy(note[i].nomnote,les_etudiants[i].nom);
-               for(int j=1;j<=nm;j++){
-                    printf("saisissez les note de letudiant : %s\n",note[i].nomnote);
-                    printf("--module : %s ",module[j].nom);
+    for (int i = 1; i <= nm - 1; ++i) {
+        for (int j = 1; j <= nm - i; ++j) {
+            if (modules2[j].moy > modules2[j + 1].moy) {
+                ModuleView tmp = modules2[j];
+                modules2[j] = modules2[j + 1];
+                modules2[j + 1] = tmp;
+            }
+        }
+    }
 
-                    do{
-                    scanf("%f",&note->N[i][j]);
-                    if(note->N[i][j]>20){
-                         printf("note doit etre inferieur ou egal a 20 reesayer :");
-                    }
-                    }while(note->N[i][j]>20);
-
-               }
-
-          }
-     }
-     printf("voulez vous saisir les notes d un autre etudiant (1 pour oui ; 0 pour non ) : ");
-     scanf("%d",&x);
-}while (x==1);
-FILE *nt;
-nt=fopen("notes.txt","w");
-fprintf(nt,"les notes des etudiants : \n\n");
-fprintf(nt,"matricule | nom prenom | note \n\n");
-for(i=1;i<=n;i++){
-     fprintf(nt,"%d | %s %s | ",les_etudiants[i].matricule,les_etudiants[i].nom,les_etudiants[i].prenom);
-     for(j=1;j<=nm;j++){
-          fprintf(nt,"%s : %0.2f  ",module[j].nom,note->N[i][j]);
-     }
-     fprintf(nt,"\n");
-}
-fclose(nt);
+    printf("Modules tries par moyenne croissante :\n");
+    for (int i = 1; i <= nm; ++i) {
+        printf("\nNom : %s\tCode : %d\tCoeff : %d\tMoyenne : %0.2f\n",
+               modules2[i].nom, modules2[i].code, modules2[i].coef, modules2[i].moy);
+    }
 }
 
-//*******************************procedure afficher les notes*******************************
-void afficher_les_notes(){
-     int mat,x,a;
-     printf("la liste des etudiants enregistre:\n");
-     for(i=1;i<=n;i++){
-     printf("matricule: %d           etudiant:%s %s\n",les_etudiants[i].matricule,les_etudiants[i].nom,les_etudiants[i].prenom);
-     }
-     printf("\n \n");
-     do{
-     printf("donnez le matricule de l'etudiant : ");
-     scanf("%d",&mat);
-     for(int i=1;i<=n;i++){
-          if(les_etudiants[i].matricule==mat){
-               x=1;
-               for(int j=1;j<=nm;j++){
-                    printf("la note de letudiant : %s\n",note[i].nomnote);
-                    printf("--> %s : %0.2f \n",module[j].nom,note->N[i][j]);
-               }
-          }
-     }
-     if(x==0){printf("l etudiant nexiste pas!!!!");}
+void moyenne_module_decroi(void) {
+    if (n == 0 || nm == 0) {
+        printf("Impossible de calculer les moyennes de modules.\n");
+        return;
+    }
 
-     printf("voulez vous afficher les notes d un autre etudiant (1 pour oui ; 0 pour non ) : ");
-     scanf("%d",&a);
-     }while((x==0)||(a==1));
+    sync_modules_view();
+
+    for (int j = 1; j <= nm; ++j) {
+        float s = 0.0f;
+        int c = 0;
+        for (int i = 1; i <= n; ++i) {
+            s += notes[i][j];
+            ++c;
+        }
+        modules2[j].moy = (c > 0) ? (s / c) : 0.0f;
+    }
+
+    for (int i = 1; i <= nm - 1; ++i) {
+        for (int j = 1; j <= nm - i; ++j) {
+            if (modules2[j].moy < modules2[j + 1].moy) {
+                ModuleView tmp = modules2[j];
+                modules2[j] = modules2[j + 1];
+                modules2[j + 1] = tmp;
+            }
+        }
+    }
+
+    printf("Modules tries par moyenne decroissante :\n");
+    for (int i = 1; i <= nm; ++i) {
+        printf("\nNom : %s\tCode : %d\tCoeff : %d\tMoyenne : %0.2f\n",
+               modules2[i].nom, modules2[i].code, modules2[i].coef, modules2[i].moy);
+    }
 }
 
-//*******************************procedure afficher moyenne des etudiant*******************************
-void afficher_moy_decroi(){
-float s,moy,V[50];
-struct liste* l=NULL, *nouveau, *dernier;
-int h,x=0;
+//======================================================================
+// Quitter
+//======================================================================
 
-     for(i=1;i<=n;i++){
-          s=0;
-          moy=0;
-          for(j=1;j<=nm;j++){
-               s=s+(note->N[i][j]*module[j].coef);
-               x=x+module[j].coef;
-          }
-          moy=moy+(s/x);
-
-
-          nouveau = malloc(sizeof(struct liste));
-nouveau->m = malloc(sizeof(struct moyenne));
-nouveau->m->moy = moy;
-nouveau->m->code = les_etudiants[i].matricule;
-nouveau->next = NULL;
-
-if (l == NULL) {
-l = nouveau;
-dernier = nouveau;
-} else {
-dernier->next = nouveau;
-dernier = nouveau;
-}
-          nouveau=l;
-
-
-
-          x=0;
-          while(nouveau!=NULL){
-                    for(int k=1;k<=n;k++){
-               if(nouveau->m->code==etudiants2[k].matricule2){
-                    etudiants2->moy2[k]=nouveau->m->moy;
-               }
-          }
-          nouveau=nouveau->next;
-          }
-
-     }
-
-do{
-               h=0;
-          for(i=1;i<=n-1;i++){
-               for(j=1;j<=n-i;j++){
-                    if(etudiants2->moy2[i]<etudiants2->moy2[i+1]){
-                    trier[i].matriculee=etudiants2[i].matricule2;
-                    trier[i].jourr=etudiants2[i].jour2;
-                    trier[i].anneee=etudiants2[i].annee2;
-                    trier[i].moiss=etudiants2[i].mois2;
-                    trier->moy[i]=etudiants2->moy2[i];
-                    strcpy(trier[i].nomm,etudiants2[i].nom2);
-                    strcpy( trier[i].prenomm,etudiants2[i].prenom2);
-                    strcpy(trier[i].lieu_de_naissancee,etudiants2[i].lieu_de_naissance2);
-                    strcpy( trier[i].adressel,etudiants2[i].adresse2);
-                    etudiants2[i]=etudiants2[i+1];
-                    etudiants2->moy2[i]=etudiants2->moy2[i+1];
-                    etudiants2[i+1].matricule2=trier[i].matriculee;
-                    etudiants2->moy2[i+1]=trier->moy[i];
-                    etudiants2[i+1].jour2= trier[i].jourr;
-                    etudiants2[i+1].mois2=trier[i].moiss;
-                    etudiants2[i+1].annee2=trier[i].anneee;
-                    strcpy( etudiants2[i+1].nom2, trier[i].nomm);
-                    strcpy( etudiants2[i+1].prenom2,trier[i].prenomm);
-                    strcpy( etudiants2[i+1].lieu_de_naissance2,trier[i].lieu_de_naissancee);
-                    strcpy( etudiants2[i+1].adresse2,trier[i].adressel);
-                    h++;}
-                    }}
-     }while(h!=0);
-
-
-printf("Les etudiants trier par moyenne decroissante : \n\n");
-     for(i=1;i<=n;i++)
-     {printf("\n");
-     printf("sa matricule :%d \n",etudiants2[i].matricule2);
-     printf("Son Nom : %s \n",etudiants2[i].nom2);
-     printf("son Prenom : %s \n",etudiants2[i].prenom2);
-     printf("sa date de naissance : %d / %d / %d \n",etudiants2[i].jour2,etudiants2[i].mois2,etudiants2[i].annee2);
-     printf("son lieu de naissance : %s \n",etudiants2[i].lieu_de_naissance2);
-     printf("son adresse : %s \n",etudiants2[i].adresse2);
-     printf("sa moyenne : %0.2f\n",etudiants2->moy2[i]);
-                    }
-
-}
-void afficher_moy_CROIS(){
-float s,moy,V[50];
-struct liste* l=NULL, *nouveau, *dernier;
-int h,x=0;
-     for(i=1;i<=n;i++){
-          s=0;
-          moy=0;
-          for(j=1;j<=nm;j++){
-               s=s+(note->N[i][j]*module[j].coef);
-               x=x+module[j].coef;
-          }
-          moy=moy+(s/x);
-
-          nouveau = malloc(sizeof(struct liste));
-nouveau->m = malloc(sizeof(struct moyenne));
-nouveau->m->moy = moy;
-nouveau->m->code = les_etudiants[i].matricule;
-nouveau->next = NULL;
-
-if (l == NULL) {
-l = nouveau;
-dernier = nouveau;
-} else {
-dernier->next = nouveau;
-dernier = nouveau;
-}
-          nouveau=l;
-
-
-
-          x=0;
-          while(nouveau!=NULL){
-                    for(int k=1;k<=n;k++){
-               if(nouveau->m->code==etudiants2[k].matricule2){
-                    etudiants2->moy2[k]=nouveau->m->moy;
-               }
-          }
-          nouveau=nouveau->next;
-          }
-
-     }
-
-
-do{
-               h=0;
-          for(i=1;i<=n-1;i++){
-               for(j=1;j<=n-i;j++){
-                    if(etudiants2->moy2[i]>etudiants2->moy2[i+1]){
-                    trier[i].matriculee=etudiants2[i].matricule2;
-                    trier[i].jourr=etudiants2[i].jour2;
-                    trier[i].anneee=etudiants2[i].annee2;
-                    trier[i].moiss=etudiants2[i].mois2;
-                    trier->moy[i]=etudiants2->moy2[i];
-                    strcpy(trier[i].nomm,etudiants2[i].nom2);
-                    strcpy( trier[i].prenomm,etudiants2[i].prenom2);
-                    strcpy(trier[i].lieu_de_naissancee,etudiants2[i].lieu_de_naissance2);
-                    strcpy( trier[i].adressel,etudiants2[i].adresse2);
-                    etudiants2[i]=etudiants2[i+1];
-                    etudiants2->moy2[i]=etudiants2->moy2[i+1];
-                    etudiants2[i+1].matricule2=trier[i].matriculee;
-                    etudiants2->moy2[i+1]=trier->moy[i];
-                    etudiants2[i+1].jour2= trier[i].jourr;
-                    etudiants2[i+1].mois2=trier[i].moiss;
-                    etudiants2[i+1].annee2=trier[i].anneee;
-                    strcpy(  etudiants2[i+1].nom2, trier[i].nomm);
-                    strcpy( etudiants2[i+1].prenom2,trier[i].prenomm);
-                    strcpy( etudiants2[i+1].lieu_de_naissance2,trier[i].lieu_de_naissancee);
-                    strcpy( etudiants2[i+1].adresse2,trier[i].adressel);
-                    h++;}
-                    }}
-     }while(h!=0);
-
-
-printf("Les etudiants trier par moyenne croissante : \n\n");
-     for(i=1;i<=n;i++)
-     {printf("\n");
-     printf("sa matricule :%d \n",etudiants2[i].matricule2);
-     printf("Son Nom : %s \n",etudiants2[i].nom2);
-     printf("son Prenom : %s \n",etudiants2[i].prenom2);
-     printf("sa date de naissance : %d / %d / %d \n",etudiants2[i].jour2,etudiants2[i].mois2,etudiants2[i].annee2);
-     printf("son lieu de naissance : %s \n",etudiants2[i].lieu_de_naissance2);
-     printf("son adresse : %s \n",etudiants2[i].adresse2);
-     printf("sa moyenne : %0.2f\n",etudiants2->moy2[i]);
-                    }
-
+void quitter(void) {
+    system("cls");
+    printf("\n\n\t------------ FIN -----------\n\n");
+    printf("\t------------ MERCI -----------\n\n");
 }
 
-//*******************************procedure afficher moyenne des modules*******************************
-void moyenne_module_crois(){
-float s,moy,V[50];
-int h,x=0;
-     for(j=1;j<=nm;j++){
-          s=0;
-          moy=0;
-          for(i=1;i<=n;i++){
-               s=s+note->N[i][j];
-               x=x+1;
-          }
-          moy=moy+(s/x);
-          module->moy[j]=moy;
-          x=0;
-          for(int k=1;k<=n;k++){
-               if(module[j].code==module2[k].code2){
-                    module2->moy2[k]=module->moy[j];
-               }
-          }
-     }
-     for(i=1;i<=nm-1;i++){
-          for(j=1;j<=nm-i;j++){
-               if(module2->moy2[j]>module2->moy2[j+1]){
-                    trier[j].coeff=module2[j].coef2;
-                    trier[j].codef=module2[j].code2;
-                    strcpy(trier[j].nomm,module2[j].nom2);
-                    trier->moy[j]=module2->moy2[j];
-                    module2[j]=module2[j+1];
-                    module2->moy2[j]=module2->moy2[j+1];
-                    module2[j+1].coef2=trier[j].coeff;
-                    module2[j+1].code2=trier[j].codef;
-                    strcpy(module2[j+1].nom2,trier[j].nomm);
-                    module2->moy2[j+1]=trier->moy[j];
-               }
-          }
-     }
-     for(i=1;i<=nm;i++){ printf("\n");
-     printf("nom du module: %s \t code: %d \t coeffission: %d \t sa moyenne: %0.2f\n",module2[i].nom2,module2[i].code2,module2[i].coef2,module2->moy2[i]);
-}
-          }
-void moyenne_module_decroi(){
-float s,moy,V[50];
-int h,x=0;
-     for(j=1;j<=nm;j++){
-          s=0;
-          moy=0;
-          for(i=1;i<=n;i++){
-               s=s+note->N[i][j];
-               x=x+1;
-          }
-          moy=moy+(s/x);
-          module->moy[j]=moy;
-          x=0;
-          for(int k=1;k<=n;k++){
-               if(module[j].code==module2[k].code2){
-                    module2->moy2[k]=module->moy[j];
-               }
-          }
-     }
-     for(i=1;i<=nm-1;i++){
-          for(j=1;j<=nm-i;j++){
-               if(module2->moy2[j]<module2->moy2[j+1]){
-                    trier[j].coeff=module2[j].coef2;
-                    trier[j].codef=module2[j].code2;
-                    strcpy(trier[j].nomm,module2[j].nom2);
-                    trier->moy[j]=module2->moy2[j];
-                    module2[j]=module2[j+1];
-                    module2->moy2[j]=module2->moy2[j+1];
-                    module2[j+1].coef2=trier[j].coeff;
-                    module2[j+1].code2=trier[j].codef;
-                    strcpy(module2[j+1].nom2,trier[j].nomm);
-                    module2->moy2[j+1]=trier->moy[j];
-               }
-          }
-     }
-     for(i=1;i<=nm;i++){ printf("\n");
-     printf("nom du module: %s \t code: %d \t coeffission: %d \t sa moyenne: %0.2f\n",module2[i].nom2,module2[i].code2,module2[i].coef2,module2->moy2[i]);
-}
-          }
+//======================================================================
+// MAIN
+//======================================================================
 
+int main(void) {
+menu:
+    do {
+        printf("\n\033[1;34m   *******      Gestion des etudiants    ****** \033[0m\n\n");
+        printf("=================================================================== \n\n");
+        printf("  Total des etudiants : %d\n", n);
+        printf("  Total des modules   : %d\n\n", nm);
+        printf("-------------------Etudiants---------------------------------------- \n");
+        printf("  1.  Saisir les etudiants\n");
+        printf("  2.  Afficher la liste des etudiants\n");
+        printf("  3.  Gérer les etudiants\n\n");
+        printf("-------------------Modules------------------------------------------ \n");
+        printf("  4.  Saisir les modules\n");
+        printf("  5.  Gérer les modules\n");
+        printf("  6.  Afficher les modules\n\n");
+        printf("-------------------Notes-------------------------------------------- \n");
+        printf("  7.  Saisir les notes\n");
+        printf("  8.  Afficher les notes\n\n");
+        printf("  9.  Quitter\n");
+        printf("=================================================================== \n\n");
+        printf("\t\033[1;33mPS : en cas d'espace, utilisez '_' \033[0m\n\n");
+        printf("Saisissez votre choix : ");
 
-//================================================================
-//============================================================================
-     //*************************** Le programme principale**********************************************
-int main()
-{   FILE *m;
-     menu:
-do{
-          printf("\n\033[1;34m   *******      Gestion des etudiants    ****** \033[0m\n\n");
-          printf("=================================================================== \n\n");
-                              printf("  Totale des eleves : %d\n\n",n);
-                              printf("  Totale de modules : %d\n\n",nm);
-          printf("-------------------Etudiant------------------------------------------ \n");
-          printf("      <1.  Saisir les etudiants------------------------------ \n");
-          printf("      <2.  Afficher la list des etudiants-------------------- \n");
-          printf("      <3.  gerer les etudiants-------------------------------- \n\n\n");
-          printf("-------------------Modules------------------------------------------- \n");
-          printf("      <4.  Saisir les modules-------------------------------- \n");
-          printf("      <5.  gerer les modules---------------------------------\n");
-          printf("      <6.  afficher les modules------------------------------ \n\n\n");
-          printf("-------------------Notes--------------------------------------------- \n");
-          printf("      <7.  saisir les notes----------------------------------\n");
-          printf("      <8.  afficher les notes--------------------------------\n\n");
-          printf("      <9.  Quitter------------------------------------------- \n\n");
-          printf("===================================================================    \n\n");
-               printf("\t \t \t \033[1;31mPS : en cas despace mettez   _   merci\033[0m\n");
-          printf("\n");
-               printf("\033[1;33mSaisissez votre choix : \033[0m");
-          scanf("%d",&choix);
-          printf("\n\n");
+        if (scanf("%d", &choix) != 1) {
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF) {}
+            choix = -1;
+        }
 
+        printf("\n");
 
+        switch (choix) {
+            case 1:
+                system("cls");
+                saisir_des_etudiant();
+                system("cls");
+                break;
 
-          switch(choix){
-case 1:{ system("cls");saisir_des_etudiant();system("cls");break;}
-case 2:{ system("cls");{system("cls");printf("\n*******Choisissez l ordre d affichage****** \n\n");
-                    printf(" 1.------avec l ordre enregistrer------ \n\n");
-                    printf(" 2.------ordre alphabetique------------ \n\n");
-                    printf(" 3.------ordre de leur moyenne--------- \n\n");
-                    printf(" 0.------retourner au MENU------------- \n\n");
-                    printf("\t-->Saisissez votre choix : ");
-                    scanf("%d",&choixxx);
-                    switch (choixxx){
-                    case 1: {system("cls");afficher_les_etudiants();break;}
-                    case 2: {system("cls");{ printf("1.------ordre ascendent------\n\n");printf("2.------ordre descendant------\n\n");printf("\t-->Saisissez votre choix : ");
-                                             scanf("%d",&choixxx);
-                                             switch (choixxx){
-                                             case 1: {system("cls");trier_ordre_alphabetique_ascendent();break;}
-                                             case 2: {system("cls");trier_ordre_alphabetique_descendant();break;}}};break;}
-                    case 3: {system("cls");printf("1.ordre croissant de leur moyenne\n\n ");printf("2.ordre decroissant de leur moyenne\n\n");printf("\t-->votre choix : ");
-                                             scanf("%d",&choixxx);
-                                             switch(choixxx){
-                                                  case 1:{system("cls");afficher_moy_CROIS();break;}
-                                                  case 2:{system("cls");afficher_moy_decroi();break;}
-                                             };break;}
-                    case 0: {system("cls");goto menu;break;}}};break;}
+            case 2: {
+                system("cls");
+                printf("\n******* Choisissez l'ordre d'affichage ******\n\n");
+                printf(" 1. Ordre d'enregistrement\n");
+                printf(" 2. Ordre alphabetique\n");
+                printf(" 3. Ordre de leur moyenne\n");
+                printf(" 0. Retour au menu\n\n");
+                printf("Votre choix : ");
+                scanf("%d", &choixxx);
 
-case 3:{ system("cls");{ printf("\n*******Choisissez l action****** \n\n");
-                    printf("1.------suprimer------ \n\n");
-                    printf("2.------modifier------ \n\n");
-                    printf("3.------ajouter------- \n\n");
-                    printf("0.------retourner au MENU------------- \n\n");
-                    printf("Saisissez votre choix : ");
-                    scanf("%d",&choixx);
-                    switch(choixx){
-                    case 1:{system("cls");supprimer();system("cls");break;}
-                    case 2:{system("cls");modifier();system("cls");break;}
-                    case 3:{system("cls");ajouter();system("cls");break;}
-                    case 0:{system("cls");goto menu;break;}}}break;}
-case 4:{ system("cls");saisir_les_modules();system("cls");break;}
-case 5:{ system("cls");{ printf("\n*******Choisissez l action****** \n\n");
-                    printf("1.------suprimer------ \n\n");
-                    printf("2.------modifier------ \n\n");
-                    printf("3.------ajouter------ \n\n");
-                    printf("0.------retourner au MENU------------- \n\n");
-                    printf("\t-->Saisissez votre choix : ");
-                    scanf("%d",&choixxxx);
-                    switch(choixxxx){
-                    case 1:{system("cls");supprimer_module();system("cls");break;}
-                    case 2:{system("cls");modifier_module();system("cls");break; }
-                    case 3:{system("cls");ajouter_modules();system("cls");break;}
-                    case 0:{system("cls");goto menu;break;}}}break;}
-case 6:{ system("cls");{ printf("\n*******Choisissez l ordre d affichage****** \n\n");
-                    printf(" 1.------avec l ordre enregistrer------ \n\n");
-                    printf(" 2.------ordre alphabetique------------ \n\n");
-                    printf(" 3.------ordre de leur moyenne--------- \n\n");
-                    printf(" 0.------retourner au MENU------------- \n\n");
-                    printf("-->Saisissez votre choix : ");
-                    scanf("%d",&choixxx);
-                    switch (choixxx){
-                    case 1:{ system("cls");afficher_les_modules();break;}
-                    case 2:{ system("cls");{ printf("1.------ordre ascendent------\n\n");printf("2.------ordre decendant------\n\n");printf("-->Saisissez votre choix : ");
-                                   scanf("%d",&choixxx);
-                                   switch(choixxx){
-                                   case 1:{system("cls");trier_module_par_nom_ascendent();break;}
-                                   case 2:{system("cls");trier_module_par_nom_descendant();break;}}};break;}
+                switch (choixxx) {
+                    case 1:
+                        system("cls");
+                        afficher_les_etudiants();
+                        break;
+                    case 2:
+                        system("cls");
+                        printf("1. Ascendant\n2. Descendant\nVotre choix : ");
+                        scanf("%d", &choixxx);
+                        if (choixxx == 1) {
+                            system("cls");
+                            trier_ordre_alphabetique_ascendent();
+                        } else if (choixxx == 2) {
+                            system("cls");
+                            trier_ordre_alphabetique_descendant();
+                        }
+                        break;
+                    case 3:
+                        system("cls");
+                        printf("1. Ordre croissant\n2. Ordre decroissant\nVotre choix : ");
+                        scanf("%d", &choixxx);
+                        if (choixxx == 1) {
+                            system("cls");
+                            afficher_moy_CROIS();
+                        } else if (choixxx == 2) {
+                            system("cls");
+                            afficher_moy_decroi();
+                        }
+                        break;
+                    case 0:
+                        system("cls");
+                        goto menu;
+                    default:
+                        break;
+                }
+                break;
+            }
 
-                    case 3:{system("cls");printf("1.------ordre ascendent------\n\n");printf("2.------ordre decendant------\n\n");printf("-->Saisissez votre choix : ");
-                    scanf("%d",&choixxx);
-                    switch(choixxx){
-                         case 1:{system("cls");moyenne_module_crois();break;}
-                         case 2:{system("cls");moyenne_module_decroi();break;}
-                    };break;}
-                    case 0:{system("cls");goto menu;break;}}};break;}
-case 7:{ system("cls");saisir_les_notes();system("cls");break;}
-case 8:{ system("cls");afficher_les_notes();break;}
-case 9:{ system("cls");quitter();break;}
-default:printf("Choix errone !!! le choix entre [0 - 9]");
-     }
-     }while(choix!=9);
-return 0;
+            case 3: {
+                system("cls");
+                printf("\n******* Choisissez l'action ******\n\n");
+                printf("1. Supprimer\n");
+                printf("2. Modifier\n");
+                printf("3. Ajouter\n");
+                printf("0. Retour au menu\n\n");
+                printf("Votre choix : ");
+                scanf("%d", &choixx);
+
+                switch (choixx) {
+                    case 1:
+                        system("cls");
+                        supprimer();
+                        system("cls");
+                        break;
+                    case 2:
+                        system("cls");
+                        modifier();
+                        system("cls");
+                        break;
+                    case 3:
+                        system("cls");
+                        ajouter();
+                        system("cls");
+                        break;
+                    case 0:
+                        system("cls");
+                        goto menu;
+                    default:
+                        break;
+                }
+                break;
+            }
+
+            case 4:
+                system("cls");
+                saisir_les_modules();
+                system("cls");
+                break;
+
+            case 5: {
+                system("cls");
+                printf("\n******* Choisissez l'action ******\n\n");
+                printf("1. Supprimer\n");
+                printf("2. Modifier\n");
+                printf("3. Ajouter\n");
+                printf("0. Retour au menu\n\n");
+                printf("Votre choix : ");
+                scanf("%d", &choixxxx);
+
+                switch (choixxxx) {
+                    case 1:
+                        system("cls");
+                        supprimer_module();
+                        system("cls");
+                        break;
+                    case 2:
+                        system("cls");
+                        modifier_module();
+                        system("cls");
+                        break;
+                    case 3:
+                        system("cls");
+                        ajouter_modules();
+                        system("cls");
+                        break;
+                    case 0:
+                        system("cls");
+                        goto menu;
+                    default:
+                        break;
+                }
+                break;
+            }
+
+            case 6: {
+                system("cls");
+                printf("\n******* Choisissez l'ordre d'affichage ******\n\n");
+                printf("1. Ordre d'enregistrement\n");
+                printf("2. Ordre alphabetique\n");
+                printf("3. Ordre par moyenne\n");
+                printf("0. Retour au menu\n\n");
+                printf("Votre choix : ");
+                scanf("%d", &choixxx);
+
+                switch (choixxx) {
+                    case 1:
+                        system("cls");
+                        afficher_les_modules();
+                        break;
+                    case 2:
+                        system("cls");
+                        printf("1. Ascendant\n2. Descendant\nVotre choix : ");
+                        scanf("%d", &choixxx);
+                        if (choixxx == 1) {
+                            system("cls");
+                            trier_module_par_nom_ascendent();
+                        } else if (choixxx == 2) {
+                            system("cls");
+                            trier_module_par_nom_descendant();
+                        }
+                        break;
+                    case 3:
+                        system("cls");
+                        printf("1. Moyenne croissante\n2. Moyenne decroissante\nVotre choix : ");
+                        scanf("%d", &choixxx);
+                        if (choixxx == 1) {
+                            system("cls");
+                            moyenne_module_crois();
+                        } else if (choixxx == 2) {
+                            system("cls");
+                            moyenne_module_decroi();
+                        }
+                        break;
+                    case 0:
+                        system("cls");
+                        goto menu;
+                    default:
+                        break;
+                }
+                break;
+            }
+
+            case 7:
+                system("cls");
+                saisir_les_notes();
+                system("cls");
+                break;
+
+            case 8:
+                system("cls");
+                afficher_les_notes();
+                break;
+
+            case 9:
+                system("cls");
+                quitter();
+                break;
+
+            default:
+                printf("Choix errone !!! le choix doit etre entre [1 - 9]\n");
+                break;
+        }
+
+    } while (choix != 9);
+
+    return 0;
 }
